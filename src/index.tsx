@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import 'antd/dist/reset.css'; // Ant Design v5 的推荐样式引入
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
