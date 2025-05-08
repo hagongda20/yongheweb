@@ -96,6 +96,10 @@ const SpecModelPage: React.FC = () => {
       dataIndex: 'category',
     },
     {
+      title: '价格',
+      dataIndex: 'price',
+    },
+    {
       title: '工序',
       dataIndex: 'process_id',
       render: (processId: number) => {
@@ -176,6 +180,7 @@ const SpecModelForm: React.FC<SpecModelFormProps> = ({ initialData, onSave, onCa
       id: initialData?.id || 0,
       name: values.name,
       category: values.category,
+      price:values.price,
       process_id: Number(values.process_id),
     };
     onSave(data);
@@ -220,6 +225,15 @@ const SpecModelForm: React.FC<SpecModelFormProps> = ({ initialData, onSave, onCa
         rules={[{ required: true, message: '请输入分类！' }]}
       >
         <Input />
+      </Form.Item>
+
+      <Form.Item
+        
+        name="price"
+        label="工价"
+        rules={[{ required: true, message: '请输入工价！' }]}
+      >
+        <Input type="number"/>
       </Form.Item>
 
       <div className="text-right">

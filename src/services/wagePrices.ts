@@ -23,7 +23,7 @@ export const createWagePrice = async (data: Omit<WagePrice, 'id'>) => {
 // 获取所有工价（可选，根据需要添加）
 export const getWagePrices = async () => {
   try {
-    const response = await axios.get('/api/wageprice');
+    const response = await axios.get('/api/wageprice/');
     return response.data;  // 假设返回的数据中包含 wage_prices 数组
   } catch (error) {
     console.error('获取工价失败:', error);

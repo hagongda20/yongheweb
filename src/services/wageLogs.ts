@@ -18,7 +18,7 @@ export interface WageLog {
 // 获取所有工资记录
 export const getWageLogs = async () => {
   try {
-    const response = await axios.get('/api/wage_logs');
+    const response = await axios.get('/api/wage_logs/');
     return response.data; // 假设返回的数据包含 'wage_logs' 字段
   } catch (error) {
     console.error('加载工资记录失败:', error);

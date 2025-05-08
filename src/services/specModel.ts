@@ -6,6 +6,7 @@ export interface SpecModel {
   name: string;
   category: string;
   process_id: number;
+  price:number;
 }
 
 // 获取所有规格型号
@@ -22,7 +23,7 @@ export const getSpecModels = async () => {
 // 创建规格型号（不包括 ID）
 export const createSpecModel = async (specData: Omit<SpecModel, 'id'>) => {
   try {
-    const response = await axios.post('/api/specmodels', specData);
+    const response = await axios.post('/api/specmodels/', specData);
     return response.data; // 返回创建的规格型号
   } catch (error) {
     console.error('创建规格型号失败:', error);

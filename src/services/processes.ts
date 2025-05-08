@@ -10,7 +10,7 @@ export interface Process {
 // 获取所有工序
 export const getProcesses = async () => {
   try {
-    const response = await axios.get('/api/processes');
+    const response = await axios.get('/api/processes/');
     return response.data;  // 假设返回的数据中包含 processes 数组
   } catch (error) {
     console.error('获取工序列表失败:', error);
@@ -21,7 +21,7 @@ export const getProcesses = async () => {
 // 创建一个新的工序
 export const createProcess = async (processData: Omit<Process, 'id'>) => {
   try {
-    const response = await axios.post('/api/processes', processData);
+    const response = await axios.post('/api/processes/', processData);
     return response.data;  // 返回新创建的工序数据
   } catch (error) {
     console.error('创建工序失败:', error);
