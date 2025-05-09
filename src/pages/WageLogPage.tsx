@@ -339,8 +339,8 @@ const WageLogPage: React.FC = () => {
       title: '工资',
       dataIndex: 'total_wage',
       valueType: 'digit',
-      renderText: (_: any, row: WageLog) =>
-        (row.actual_price * row.quantity).toFixed(2),
+      ///renderText: (_: any, row: WageLog) =>
+       // (row.actual_price * row.quantity/ row.actual_group_size).toFixed(2),
       align: 'center', 
     },
     {
