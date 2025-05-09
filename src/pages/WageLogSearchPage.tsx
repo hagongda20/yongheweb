@@ -244,14 +244,14 @@ const WageLogSearchPage: React.FC = () => {
   
 
   const columns: ProColumns<WageLog>[] = [
-    { title: '日期', dataIndex: 'date', valueType: 'text', align: 'center' },
+    { title: '日期', dataIndex: 'date', valueType: 'text', align: 'center', width:120 },
     { title: '工人', dataIndex: 'worker', valueType: 'text', align: 'center' },
     { title: '工序', dataIndex: 'process', valueType: 'text', align: 'center' },
     { title: '规格型号', dataIndex: 'spec_model', valueType: 'text', align: 'center' },
-    { title: '单价', dataIndex: 'actual_price', valueType: 'money', align: 'center' },
-    { title: '数量', dataIndex: 'quantity', align: 'center' },
-    { title: '组人数', dataIndex: 'actual_group_size', align: 'center' },
-    { title: '工资', dataIndex: 'total_wage', valueType: 'money', align: 'center' },
+    { title: '单价', dataIndex: 'actual_price', valueType: 'money', align: 'center', width:120 },
+    { title: '数量', dataIndex: 'quantity', align: 'center', width:80 },
+    { title: '组人数', dataIndex: 'actual_group_size', align: 'center', width:80 },
+    { title: '工资', dataIndex: 'total_wage', valueType: 'money', align: 'center', width:120 },
     { title: '备注', dataIndex: 'remark', align: 'center' },
   ];
 
