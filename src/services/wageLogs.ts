@@ -8,6 +8,7 @@ export interface WageLog {
   spec_model_id: number;
   date: string;
   actual_price: number;
+  actual_group_size: number;
   quantity: number;
   total_wage: number;
   remark?: string;
@@ -93,4 +94,17 @@ export const getWageLogsByDate = async (date: string) => {
     console.error(`加载 ${date} 的工资记录失败:`, error);
     throw error;
   }
+};
+
+// 日期区间、工人、工序联合查询
+export const getFilteredWageLogs = async (params: {
+  start_date?: string;
+  end_date?: string;
+  worker_id?: number | string;
+  process_id?: number | string;
+  //page?: number;
+  //page_size?: number;
+}) => {
+  const response = await axios.get('/api/wage_logs/query', { params });
+  return response.data;
 };

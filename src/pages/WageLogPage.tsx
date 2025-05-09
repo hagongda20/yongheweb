@@ -20,6 +20,7 @@ interface WageLog {
   //spec_model: string;
   spec_model_id: number;
   actual_price: number;
+  actual_group_size: number;
   quantity: number;
   group_size: number;
   total_wage: number;
@@ -148,6 +149,7 @@ const WageLogPage: React.FC = () => {
           spec_model_id: 0,
           spec_model:'',
           actual_price: 0,
+          actual_group_size: 1,
           quantity: 0,
           group_size: 1,
           total_wage: 0,
@@ -175,6 +177,21 @@ const WageLogPage: React.FC = () => {
           value: item.id,
         })),
       formItemProps: { rules: [{ required: true }] },
+      fieldProps: (form, config) => ({
+        onChange: (value) => {
+          const rowKey = config?.rowKey;
+          const worker = workers.find((item) => item.id === Number(value));
+          if (rowKey && form) {
+            form.setFieldsValue({
+              [rowKey]: {
+                worker_id: value,
+                process_id: worker?.process_id,
+                //spec_model_id: undefined, // 清空规格型号
+              },
+            });
+          }
+        },
+      }),
       width: '7%',
       align: 'center', // 设置内容居中
     },   
@@ -255,7 +272,8 @@ const WageLogPage: React.FC = () => {
         return {
           onChange: (value: number) => {
             const quantity = form?.getFieldValue?.([rowKey, 'quantity']) || 0;
-            const total = parseFloat((value * quantity).toFixed(2));
+            const actual_group_size = form?.getFieldValue?.([rowKey, 'actual_group_size']) || 0;
+            const total = parseFloat((value * quantity / actual_group_size).toFixed(2));
             form?.setFieldsValue?.({
               [rowKey]: {
                 total_wage: total,
@@ -275,8 +293,31 @@ const WageLogPage: React.FC = () => {
         const rowKey = String(config?.rowKey); // 强制转成字符串，避免 TS 报错
         return {
           onChange: (value: number) => {
-            const quantity = form?.getFieldValue?.([rowKey, 'actual_price']) || 0;
-            const total = parseFloat((value * quantity).toFixed(2));
+            const actual_price = form?.getFieldValue?.([rowKey, 'actual_price']) || 0;
+            const actual_group_size = form?.getFieldValue?.([rowKey, 'actual_group_size']) || 0;
+            const total = parseFloat((value * actual_price / actual_group_size).toFixed(2));
+            form?.setFieldsValue?.({
+              [rowKey]: {
+                total_wage: total,
+              },
+            });
+          },
+        };
+      },
+      align: 'center', 
+    },
+    {
+      title: '组人数',
+      dataIndex: 'actual_group_size',
+      valueType: 'digit',
+      formItemProps: { rules: [{ required: true }] },
+      fieldProps: (form, config) => {
+        const rowKey = String(config?.rowKey); // 强制转成字符串，避免 TS 报错
+        return {
+          onChange: (value: number) => {
+            const actual_price = form?.getFieldValue?.([rowKey, 'actual_price']) || 0;
+            const quantity = form?.getFieldValue?.([rowKey, 'quantity']) || 0;
+            const total = parseFloat((actual_price * quantity / value).toFixed(2));
             form?.setFieldsValue?.({
               [rowKey]: {
                 total_wage: total,
@@ -448,6 +489,7 @@ const WageLogPage: React.FC = () => {
                 spec_model_id: updatedRow.spec_model_id,
                 date: updatedRow.date,
                 actual_price: updatedRow.actual_price,
+                actual_group_size: updatedRow.actual_group_size,
                 quantity: updatedRow.quantity,
                 total_wage: updatedRow.total_wage,
                 remark: updatedRow.remark
@@ -464,6 +506,7 @@ const WageLogPage: React.FC = () => {
                 spec_model_id: updatedRow.spec_model_id,
                 date: updatedRow.date,
                 actual_price: updatedRow.actual_price,
+                actual_group_size: updatedRow.actual_group_size,
                 quantity: updatedRow.quantity,
                 total_wage: updatedRow.total_wage,
                 remark: updatedRow.remark
@@ -489,6 +532,7 @@ const WageLogPage: React.FC = () => {
             //spec_model: '',
             spec_model_id: 0,
             actual_price: 0,
+            actual_group_size: 1,
             quantity: 0,
             group_size: 1,
             total_wage: 0,
