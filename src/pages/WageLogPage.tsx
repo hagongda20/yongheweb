@@ -178,6 +178,9 @@ const WageLogPage: React.FC = () => {
         })),
       formItemProps: { rules: [{ required: true }] },
       fieldProps: (form, config) => ({
+        showSearch: true,
+        filterOption: (input: string, option: { label: any; }) =>
+          (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
         onChange: (value) => {
           const rowKey = config?.rowKey;
           const worker = workers.find((item) => item.id === Number(value));
@@ -207,6 +210,9 @@ const WageLogPage: React.FC = () => {
         })),
       formItemProps: { rules: [{ required: true }] },
       fieldProps: (form, config) => ({
+        showSearch: true,
+        filterOption: (input: string, option: { label: any; }) =>
+          (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
         onChange: (value) => {
           const rowKey = config?.rowKey;
           if (rowKey && form) {
@@ -238,6 +244,9 @@ const WageLogPage: React.FC = () => {
           }));
     
           return {
+            showSearch: true,
+            filterOption: (input: string, option: { label: any; }) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase()),
             options,
             onChange: (value: number) => {
               const spec = allSpecModels.find((item) => item.id === value);
@@ -427,6 +436,8 @@ const WageLogPage: React.FC = () => {
             value: item.id,
           }))}
           fieldProps={{
+            showSearch: true, // 开启搜索
+            optionFilterProp: 'label', // 允许根据 label 过滤
             value: filterProcess,
             onChange: setFilterProcess,
             allowClear: true,

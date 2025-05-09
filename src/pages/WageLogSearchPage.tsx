@@ -105,7 +105,7 @@ const WageLogSearchPage: React.FC = () => {
         //page: pagination.current,
         //page_size: pagination.pageSize,
       });
-      console.log('综合查询：',res)
+      //console.log('综合查询：',res)
       setDataSource(res.wage_logs || []);
       setPagination((prev) => ({
         ...prev,
@@ -289,8 +289,12 @@ const WageLogSearchPage: React.FC = () => {
         </Form.Item>
         <Form.Item name="process_id" label="工序">
           <Select 
+            showSearch
             placeholder="选择工序" 
             style={{ width: 160 }} 
+            filterOption={(input, option) =>
+              (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+            }
             options={processes.map(item => ({
               label: item.name,
               value: item.id,
