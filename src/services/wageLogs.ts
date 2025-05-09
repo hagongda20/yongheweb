@@ -81,3 +81,16 @@ export const getWageLogById = async (id: number) => {
     throw error;
   }
 };
+
+// 根据指定日期获取工资记录
+export const getWageLogsByDate = async (date: string) => {
+  try {
+    const response = await axios.get('/api/wage_logs/', {
+      params: { date }, // 假设后端通过 query 参数 ?date=yyyy-mm-dd 来筛选
+    });
+    return response.data; // 返回的数据结构应与 getWageLogs 相同
+  } catch (error) {
+    console.error(`加载 ${date} 的工资记录失败:`, error);
+    throw error;
+  }
+};

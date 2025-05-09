@@ -3,12 +3,12 @@ import {
   ProColumns,
   ProFormSelect,
 } from '@ant-design/pro-components';
-import { DatePicker, notification } from 'antd';
+import { DatePicker, notification, Modal } from 'antd';
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { getWorkers } from '../services/workers';
 import { getProcesses } from '../services/processes';
 import { getSpecModels } from '../services/specModel';
-import { getWageLogs, updateWageLog, createWageLog } from '../services/wageLogs';
+import { getWageLogs, updateWageLog, createWageLog, deleteWageLog, getWageLogById, getWageLogsByDate } from '../services/wageLogs';
 import dayjs from 'dayjs';
 
 interface WageLog {
@@ -57,19 +57,20 @@ const WageLogPage: React.FC = () => {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
   const [dataSource, setDataSource] = useState<WageLog[]>([]);   //工资记录数据
+  //const [dataSource, setDataSource] = useState<WageLog[]>([]);   //工资记录数据
   //const [specModels, setSpecModels] = useState<SpecModel[]>([]);
   const [allSpecModels, setAllSpecModels] = useState<SpecModel[]>([]);
 
   // 搜索条件状态
-  const [filterWorker, setFilterWorker] = useState<string>();
-  const [filterProcess, setFilterProcess] = useState<string>();
-  const [filterDate, setFilterDate] = useState<string>();
+  const [filterWorker, setFilterWorker] = useState<number>();
+  const [filterProcess, setFilterProcess] = useState<number>();
+  const [filterDate, setFilterDate] = useState<string>(dayjs().format('YYYY-MM-DD'));
 
   // 根据搜索条件过滤数据
   const filteredData = useMemo(() => {
     return dataSource.filter((item) => {
-      const matchWorker = !filterWorker || item.worker === filterWorker;
-      const matchProcess = !filterProcess || item.process === filterProcess;
+      const matchWorker = !filterWorker || item.worker_id === filterWorker;
+      const matchProcess = !filterProcess || item.process_id === filterProcess;
       const matchDate = !filterDate || item.date === filterDate;
       return matchWorker && matchProcess && matchDate;
     });
@@ -80,12 +81,13 @@ const WageLogPage: React.FC = () => {
     const loadWorkers = async () => {
       try {
         const res = await getWorkers();
-        console.log(res);
+        //console.log(res);
         const workersWithProcessName = res.data.workers.map((w: any) => ({
           ...w,
           process_name: w.process.name || '',
+          process_id: w.process.id || '',
         }));
-        //console.log(res.data.workers);
+        //console.log("所有工人记录：", workersWithProcessName);
         setWorkers(workersWithProcessName);
       } catch (error) {
         console.error('加载工人失败:', error);
@@ -119,14 +121,46 @@ const WageLogPage: React.FC = () => {
 
   // 加载工资记录
   useEffect(() => {
-      //加载工资记录
+    if (workers.length === 0) return;
     const loadWageLog = async () => {
-      const res = await getWageLogs();
-      console.log("工资记录：", res);
-      setDataSource(res.wage_logs);
+      
+      const wageRes = await getWageLogsByDate(filterDate);
+      const wageLogs: WageLog[] = wageRes.wage_logs || [];
+      //const workers: Worker[] = workerRes.data?.workers || [];
+  
+      // 获取已有工资记录的工人 ID 集合
+      const recordedWorkerIds = new Set<number>(
+        wageLogs.map((log: WageLog) => log.worker_id)
+      );
+  
+      const today = dayjs().format('YYYY-MM-DD');
+  
+      // 创建未记录工人的空记录
+      const missingLogs: WageLog[] = workers
+        .filter((worker: Worker) => !recordedWorkerIds.has(worker.id))
+        .map((worker: Worker) => ({
+          id: Date.now() + worker.id, // 确保唯一
+          isNew: true,
+          worker_id: worker.id,
+          worker:'',
+          process_id: worker.process_id,
+          process:worker.process_name,
+          spec_model_id: 0,
+          spec_model:'',
+          actual_price: 0,
+          quantity: 0,
+          group_size: 1,
+          total_wage: 0,
+          date: filterDate,
+          remark: '',
+        }));
+      //console.log("补足不在工资记录上的工人后的信息:", [...wageLogs, ...missingLogs]);  
+      setDataSource([...wageLogs, ...missingLogs]);
     };
+  
     loadWageLog();
-  }, []);
+  }, [workers,filterDate]);
+  
 
  
 
@@ -272,7 +306,7 @@ const WageLogPage: React.FC = () => {
       title: '日期',
       dataIndex: 'date',
       valueType: 'date',
-      initialValue: dayjs().format('YYYY-MM-DD'),
+      initialValue: filterDate,
       align: 'center', 
     },
     {
@@ -296,7 +330,21 @@ const WageLogPage: React.FC = () => {
         // eslint-disable-next-line jsx-a11y/anchor-is-valid
         <a
           key="delete"
-          onClick={() => {
+          onClick={async () => {
+            let hasRecord = false;
+            try {
+              await getWageLogById(record.id);
+              hasRecord = true;
+            } catch (error: any) {
+              if (error.response && error.response.status === 404) {
+                hasRecord = false;
+              } else {
+                notification.error({ message: '查询工资记录失败' });
+                return;
+              }
+            }
+            if(hasRecord)
+              deleteWageLog(record.id);
             setDataSource((prev) =>
               prev.filter((item) => item.id !== record.id)
             );
@@ -310,38 +358,58 @@ const WageLogPage: React.FC = () => {
 
   return (
     <>
-      <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
+      <div style={{ marginBottom: 26, display: 'flex', gap: 16, alignItems: 'center' }}>
         <ProFormSelect
           name="worker"
           label="工人"
-          options={workers}
+          options={workers.map(item => ({
+            label: item.name,
+            value: item.id,
+          }))}
           fieldProps={{
+            showSearch: true, // 开启搜索
+            optionFilterProp: 'label', // 允许根据 label 过滤
             value: filterWorker,
             onChange: setFilterWorker,
             allowClear: true,
+          }}
+          style={{ width: 200 }}
+          formItemProps={{
+            style: { marginBottom: 0 }, // 去掉下边距
           }}
         />
         <ProFormSelect
           name="process"
           label="工序"
-          options={processes}
+          options={processes.map(item => ({
+            label: item.name,
+            value: item.id,
+          }))}
           fieldProps={{
             value: filterProcess,
             onChange: setFilterProcess,
             allowClear: true,
           }}
+          style={{ width: 200 }}
+          formItemProps={{
+            style: { marginBottom: 0 }, // 去掉下边距
+          }}
         />
         <DatePicker
-          style={{ marginTop: 30 }}
+          style={{ width: 200 }}  // 设置固定宽度，避免过长
           placeholder="选择日期"
-          value={filterDate ? dayjs(filterDate) : null}
-          onChange={(_, dateString) => setFilterDate(typeof dateString === 'string' ? dateString : undefined)}
 
+          value={dayjs(filterDate)}
+          onChange={(_, dateString) => {
+            if (typeof dateString === 'string') setFilterDate(dateString);
+          }}
         />
       </div>
 
+
+
       <EditableProTable<WageLog>
-        headerTitle="工资记录"
+        //headerTitle="工资记录"
         rowKey="id"
         actionRef={actionRef}
         columns={columns}
@@ -358,7 +426,21 @@ const WageLogPage: React.FC = () => {
             };
             const newData = [...dataSource];
             const index = newData.findIndex((item) => item.id === record.id);
-            if (index > -1) {//如果是编辑数据
+            
+            let hasRecord = false;
+            try {
+              await getWageLogById(record.id);
+              hasRecord = true;
+            } catch (error: any) {
+              if (error.response && error.response.status === 404) {
+                hasRecord = false;
+              } else {
+                notification.error({ message: '查询工资记录失败' });
+                return;
+              }
+            }
+
+            if (index > -1 && hasRecord) {//如果是编辑数据
               const updateToDatabase = {
                 id: updatedRow.id,
                 worker_id: updatedRow.worker_id,
@@ -397,6 +479,7 @@ const WageLogPage: React.FC = () => {
           },
         }}
         recordCreatorProps={{
+          position: 'top',
           record: () => ({
             id: Date.now(),
             worker: '',
@@ -409,7 +492,7 @@ const WageLogPage: React.FC = () => {
             quantity: 0,
             group_size: 1,
             total_wage: 0,
-            date: dayjs().format('YYYY-MM-DD'),
+            date: filterDate,
             remark: '',
           }),
         }}

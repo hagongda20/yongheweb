@@ -43,7 +43,7 @@ interface WageLog {
 }
 
 // 页面组件
-const WageLogPage = () => {
+const WageLogCheckPage = () => {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
   const [wageLogs, setWageLogs] = useState<WageLog[]>([]);
@@ -401,4 +401,4 @@ const WageLogPage = () => {
   );
 };
 
-export default WageLogPage;   
+export default WageLogCheckPage;   

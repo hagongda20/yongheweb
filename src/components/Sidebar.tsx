@@ -2,7 +2,7 @@ import { Menu } from 'antd';
 import {
   UserOutlined,
   AppstoreOutlined,
-  ProfileOutlined,
+  SearchOutlined,
   DollarOutlined,
   FileTextOutlined,
 } from '@ant-design/icons';
@@ -30,18 +30,19 @@ const Sidebar = () => {
         },
         {
           key: '/spec-models',
-          icon: <ProfileOutlined />,
-          label: <Link to="/spec-models">规格型号</Link>,
-        },
-        {
-          key: '/wage-prices',
           icon: <DollarOutlined />,
-          label: <Link to="/wage-prices">工价设定</Link>,
+          label: <Link to="/spec-models">规格工价</Link>,
         },
+        
         {
           key: '/wage_logs',
           icon: <FileTextOutlined />,
-          label: <Link to="/wage_logs">工资记录</Link>,
+          label: <Link to="/wage_logs">日薪录入</Link>,
+        },
+        {
+          key: '/wage_logs_check',
+          icon: <SearchOutlined />,
+          label: <Link to="/wage_logs_check">工资查询</Link>,
         },
       ]}
     />

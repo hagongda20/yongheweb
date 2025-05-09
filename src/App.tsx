@@ -4,7 +4,7 @@ import WorkerPage from './pages/workers';
 import ProcessPage from './pages/ProcessPage';
 import SpecModelPage from './pages/SpecModelPage';
 import Sidebar from './components/Sidebar';
-import WagePricePage from './pages/WagePricePage';
+import WageLogCheckPage from './pages/WagePricePage';
 import WageLogPage from './pages/WageLogPage';
 
 const {Content, Sider } = Layout;
@@ -27,8 +27,8 @@ function App() {
               <Route path="/workers" element={<WorkerPage />} />
               <Route path="/processes" element={<ProcessPage />} />
               <Route path="/spec-models" element={<SpecModelPage />} />
-              <Route path="/wage-prices" element={<WagePricePage />} />
               <Route path="/wage_logs" element={<WageLogPage />} />
+              <Route path="/wage_logs_check" element={<WageLogCheckPage />} />
             </Routes>
           </Content>
         </Layout>
