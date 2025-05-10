@@ -3,12 +3,12 @@ import {
   ProColumns,
   ProFormSelect,
 } from '@ant-design/pro-components';
-import { DatePicker, notification, Modal } from 'antd';
+import { DatePicker, notification } from 'antd';
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { getWorkers } from '../services/workers';
+import { getWorkersBySearchDate } from '../services/workers';
 import { getProcesses } from '../services/processes';
 import { getSpecModels } from '../services/specModel';
-import { getWageLogs, updateWageLog, createWageLog, deleteWageLog, getWageLogById, getWageLogsByDate } from '../services/wageLogs';
+import { updateWageLog, createWageLog, deleteWageLog, getWageLogById, getWageLogsByDate } from '../services/wageLogs';
 import dayjs from 'dayjs';
 
 interface WageLog {
@@ -36,6 +36,9 @@ interface Worker {
   group: string;
   process_id: number;
   process_name: string;
+  entry_date:string;
+  leave_date:string;
+  status: string;
 }
 
 interface SpecModel {
@@ -58,8 +61,6 @@ const WageLogPage: React.FC = () => {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
   const [dataSource, setDataSource] = useState<WageLog[]>([]);   //工资记录数据
-  //const [dataSource, setDataSource] = useState<WageLog[]>([]);   //工资记录数据
-  //const [specModels, setSpecModels] = useState<SpecModel[]>([]);
   const [allSpecModels, setAllSpecModels] = useState<SpecModel[]>([]);
 
   // 搜索条件状态
@@ -77,25 +78,27 @@ const WageLogPage: React.FC = () => {
     });
   }, [dataSource, filterWorker, filterProcess, filterDate]);
 
-  // 加载工人
+  // 加载工人  加载所有在查询日期里没有离职的工人
   useEffect(() => {
     const loadWorkers = async () => {
       try {
-        const res = await getWorkers();
-        //console.log(res);
-        const workersWithProcessName = res.data.workers.map((w: any) => ({
+        //const res = await getWorkers();
+        const res = await getWorkersBySearchDate(filterDate);
+        //console.log('res:',res);
+        const workersWithProcessName = res.workers.map((w: any) => ({
           ...w,
           process_name: w.process.name || '',
           process_id: w.process.id || '',
         }));
-        //console.log("所有工人记录：", workersWithProcessName);
+        console.log("所有工人记录：", workersWithProcessName);
         setWorkers(workersWithProcessName);
+        
       } catch (error) {
         console.error('加载工人失败:', error);
       }
     };
     loadWorkers();
-  }, []);
+  }, [filterDate]);
 
   // 加载工序
     useEffect(() => {
@@ -127,15 +130,12 @@ const WageLogPage: React.FC = () => {
       
       const wageRes = await getWageLogsByDate(filterDate);
       const wageLogs: WageLog[] = wageRes.wage_logs || [];
-      //const workers: Worker[] = workerRes.data?.workers || [];
-  
       // 获取已有工资记录的工人 ID 集合
       const recordedWorkerIds = new Set<number>(
         wageLogs.map((log: WageLog) => log.worker_id)
       );
   
-      const today = dayjs().format('YYYY-MM-DD');
-  
+      //const today = dayjs().format('YYYY-MM-DD');
       // 创建未记录工人的空记录
       const missingLogs: WageLog[] = workers
         .filter((worker: Worker) => !recordedWorkerIds.has(worker.id))
@@ -143,7 +143,7 @@ const WageLogPage: React.FC = () => {
           id: Date.now() + worker.id, // 确保唯一
           isNew: true,
           worker_id: worker.id,
-          worker:'',
+          worker:worker.name,
           process_id: worker.process_id,
           process:worker.process_name,
           spec_model_id: 0,
@@ -156,12 +156,12 @@ const WageLogPage: React.FC = () => {
           date: filterDate,
           remark: '',
         }));
-      //console.log("补足不在工资记录上的工人后的信息:", [...wageLogs, ...missingLogs]);  
+      console.log("补足不在工资记录上的工人后的信息:", [...wageLogs, ...missingLogs]);  
       setDataSource([...wageLogs, ...missingLogs]);
     };
   
     loadWageLog();
-  }, [workers,filterDate]);
+  }, [workers]);
   
 
  

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Form, Input, Select, Button, Space, message } from 'antd';
+import { Form, Input, Select, Button, Space, message, DatePicker, Radio } from 'antd';
+import dayjs from 'dayjs';
 
 const { Option } = Select;
 
@@ -27,17 +28,30 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ initialData, onSave, onC
 
   useEffect(() => {
     if (initialData) {
-      form.setFieldsValue(initialData);
+      const newData = {
+        ...initialData,
+        entry_date: initialData.entry_date ? dayjs(initialData.entry_date) : null,
+        leave_date: initialData.leave_date ? dayjs(initialData.leave_date) : null,
+      };
+      form.setFieldsValue(newData);
     } else {
+      form.setFieldsValue({ status: '在职' }); // ✅ 设置默认状态为“在职”
       form.resetFields();
     }
   }, [initialData, form]);
 
+  const status = Form.useWatch('status', form); // ✅ 监听状态变化
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      await onSave(values);
-      form.resetFields(); // 保存成功后，清空表单
+      const payload = {
+        ...values,
+        entry_date: values.entry_date ? values.entry_date.format('YYYY-MM-DD') : null,
+        leave_date: values.leave_date ? values.leave_date.format('YYYY-MM-DD') : null,
+      };
+      await onSave(payload);
+      form.resetFields();
     } catch (err: any) {
       if (err.errorFields) {
         message.error('请填写完整信息');
@@ -46,7 +60,7 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ initialData, onSave, onC
   };
 
   const handleCancel = () => {
-    form.resetFields(); // 取消时也清空
+    form.resetFields();
     onCancel();
   };
 
@@ -56,11 +70,15 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ initialData, onSave, onC
         <Input />
       </Form.Item>
 
-      <Form.Item name="id_card" label="身份证号">
-        <Input />
+      <Form.Item name="process_id" label="所属工序" rules={[{ required: true, message: '请选择工序' }]}>
+        <Select placeholder="请选择工序">
+          {processes.map(proc => (
+            <Option key={proc.id} value={proc.id}>{proc.name}</Option>
+          ))}
+        </Select>
       </Form.Item>
 
-      <Form.Item name="remark" label="备注">
+      <Form.Item name="id_card" label="身份证号">
         <Input />
       </Form.Item>
 
@@ -68,12 +86,26 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ initialData, onSave, onC
         <Input />
       </Form.Item>
 
-      <Form.Item name="process_id" label="所属工序" rules={[{ required: true, message: '请选择工序' }]}>
-        <Select placeholder="请选择工序">
-          {processes.map(proc => (
-            <Option key={proc.id} value={proc.id}>{proc.name}</Option>
-          ))}
-        </Select>
+      <Form.Item name="entry_date" label="入职日期" rules={[{ required: true, message: '请选择入职日期' }]}>
+        <DatePicker style={{ width: '100%' }} />
+      </Form.Item>
+
+      {/* ✅ 状态控制显示离职时间 */}
+      {status === '离职' && (
+        <Form.Item name="leave_date" label="离职日期">
+          <DatePicker style={{ width: '100%' }} />
+        </Form.Item>
+      )}
+
+      <Form.Item name="status" label="状态" initialValue="在职">
+        <Radio.Group>
+          <Radio value="在职">在职</Radio>
+          <Radio value="离职">离职</Radio>
+        </Radio.Group>
+      </Form.Item>
+
+      <Form.Item name="remark" label="备注">
+        <Input />
       </Form.Item>
 
       <Form.Item>
