@@ -5,7 +5,7 @@ import {
 } from '@ant-design/pro-components';
 import { DatePicker, notification } from 'antd';
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { getWorkersBySearchDate } from '../services/workers';
+import { getWorkers, getWorkersBySearchDate } from '../services/workers';
 import { getProcesses } from '../services/processes';
 import { getSpecModels } from '../services/specModel';
 import { updateWageLog, createWageLog, deleteWageLog, getWageLogById, getWageLogsByDate } from '../services/wageLogs';
@@ -59,6 +59,7 @@ const WageLogPage: React.FC = () => {
   const actionRef = useRef<any>(null);
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
+  const [allWorkers, setAllWorkers] = useState<Worker[]>([]);
   const [processes, setProcesses] = useState<Process[]>([]);
   const [dataSource, setDataSource] = useState<WageLog[]>([]);   //工资记录数据
   const [allSpecModels, setAllSpecModels] = useState<SpecModel[]>([]);
@@ -78,11 +79,31 @@ const WageLogPage: React.FC = () => {
     });
   }, [dataSource, filterWorker, filterProcess, filterDate]);
 
+  // 加载工人
+    useEffect(() => {
+      const loadAllWorkers = async () => {
+        try {
+          const res = await getWorkers();
+          //console.log(res);
+          const workersWithProcessName = res.data.workers.map((w: any) => ({
+            ...w,
+            process_name: w.process.name || '',
+            process_id: w.process.id || '',
+          }));
+          //console.log("所有工人记录：", workersWithProcessName);
+          setAllWorkers(workersWithProcessName);
+        } catch (error) {
+          console.error('加载工人失败:', error);
+        }
+      };
+      loadAllWorkers();
+    }, []);
+
   // 加载工人  加载所有在查询日期里没有离职的工人
   useEffect(() => {
     const loadWorkers = async () => {
       try {
-        //const res = await getWorkers();
+        
         const res = await getWorkersBySearchDate(filterDate);
         //console.log('res:',res);
         const workersWithProcessName = res.workers.map((w: any) => ({
@@ -90,7 +111,7 @@ const WageLogPage: React.FC = () => {
           process_name: w.process.name || '',
           process_id: w.process.id || '',
         }));
-        console.log("所有工人记录：", workersWithProcessName);
+        //console.log("所有工人记录：", workersWithProcessName);
         setWorkers(workersWithProcessName);
         
       } catch (error) {
@@ -141,7 +162,7 @@ const WageLogPage: React.FC = () => {
         .filter((worker: Worker) => !recordedWorkerIds.has(worker.id))
         .map((worker: Worker) => ({
           id: Date.now() + worker.id, // 确保唯一
-          isNew: true,
+          //isNew: true,
           worker_id: worker.id,
           worker:worker.name,
           process_id: worker.process_id,
@@ -156,12 +177,13 @@ const WageLogPage: React.FC = () => {
           date: filterDate,
           remark: '',
         }));
-      console.log("补足不在工资记录上的工人后的信息:", [...wageLogs, ...missingLogs]);  
+      //console.log("补足不在工资记录上的工人后的信息:", [...wageLogs, ...missingLogs]);  
       setDataSource([...wageLogs, ...missingLogs]);
     };
   
     loadWageLog();
-  }, [workers]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ workers]);
   
 
  
@@ -172,7 +194,7 @@ const WageLogPage: React.FC = () => {
       dataIndex: 'worker_id',
       valueType: 'select',
       request: async () =>
-        workers.map((item) => ({
+        allWorkers.map((item) => ({
           label: item.name,
           value: item.id,
         })),
