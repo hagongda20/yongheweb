@@ -6,6 +6,7 @@ import SpecModelPage from './pages/SpecModelPage';
 import Sidebar from './components/Sidebar';
 import WageLogSearchPage from './pages/WageLogSearchPage';
 import WageLogPage from './pages/WageLogPage';
+import LoginPage from './pages/LoginPage';
 
 const {Content, Sider } = Layout;
 
@@ -24,6 +25,7 @@ function App() {
           
           <Content style={{ margin: '16px', background: colorBgContainer, padding: 24 }}>
             <Routes>
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/workers" element={<WorkerPage />} />
               <Route path="/processes" element={<ProcessPage />} />
               <Route path="/spec-models" element={<SpecModelPage />} />

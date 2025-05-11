@@ -1,4 +1,5 @@
-import axios from 'axios';
+
+import request from '../utils/request';
 
 export interface Worker {
   id: number;
@@ -12,14 +13,14 @@ export interface Worker {
   status?: string;
 }
 
-export const getWorkers = () => axios.get<{ workers: Worker[] }>('/api/workers/');
-export const createWorker = (worker: Partial<Worker>) => axios.post('/api/workers/', worker);
-export const updateWorker = (id: number, worker: Partial<Worker>) => axios.put(`/api/workers/${id}`, worker);
-export const deleteWorker = (id: number) => axios.delete(`/api/workers/${id}`);
+export const getWorkers = () => request.get<{ workers: Worker[] }>('/api/workers/');
+export const createWorker = (worker: Partial<Worker>) => request.post('/api/workers/', worker);
+export const updateWorker = (id: number, worker: Partial<Worker>) => request.put(`/api/workers/${id}`, worker);
+export const deleteWorker = (id: number) => request.delete(`/api/workers/${id}`);
 // 根据指定日期在岗的工人
 export const getWorkersBySearchDate = async (date: string) => {
   try {
-    const response = await axios.get<{ workers: Worker[] }>('/api/workers/', {
+    const response = await request.get<{ workers: Worker[] }>('/api/workers/', {
       params: { date }, // 假设后端通过 query 参数 ?date=yyyy-mm-dd 来筛选
     });
     return response.data; // 返回的数据结构应与 getWageLogs 相同
