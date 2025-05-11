@@ -304,7 +304,7 @@ const WageLogPage: React.FC = () => {
           onChange: (value: number) => {
             const quantity = form?.getFieldValue?.([rowKey, 'quantity']) || 0;
             const actual_group_size = form?.getFieldValue?.([rowKey, 'actual_group_size']) || 0;
-            const total = parseFloat((value * quantity / actual_group_size).toFixed(2));
+            const total = parseFloat((value * quantity / actual_group_size).toFixed(1));
             form?.setFieldsValue?.({
               [rowKey]: {
                 total_wage: total,
@@ -326,7 +326,7 @@ const WageLogPage: React.FC = () => {
           onChange: (value: number) => {
             const actual_price = form?.getFieldValue?.([rowKey, 'actual_price']) || 0;
             const actual_group_size = form?.getFieldValue?.([rowKey, 'actual_group_size']) || 0;
-            const total = parseFloat((value * actual_price / actual_group_size).toFixed(2));
+            const total = parseFloat((value * actual_price / actual_group_size).toFixed(1));
             form?.setFieldsValue?.({
               [rowKey]: {
                 total_wage: total,
@@ -348,7 +348,7 @@ const WageLogPage: React.FC = () => {
           onChange: (value: number) => {
             const actual_price = form?.getFieldValue?.([rowKey, 'actual_price']) || 0;
             const quantity = form?.getFieldValue?.([rowKey, 'quantity']) || 0;
-            const total = parseFloat((actual_price * quantity / value).toFixed(2));
+            const total = parseFloat((actual_price * quantity / value).toFixed(1));
             form?.setFieldsValue?.({
               [rowKey]: {
                 total_wage: total,
