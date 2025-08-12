@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Form, Input, Select, Button, Space, message, DatePicker, Radio } from 'antd';
+import { getProcesses } from '../../services/processes';
 import dayjs from 'dayjs';
 
 const { Option } = Select;
@@ -15,15 +16,17 @@ export const WorkerForm: React.FC<WorkerFormProps> = ({ initialData, onSave, onC
   const [form] = Form.useForm();
   const [processes, setProcesses] = useState<{ id: number, name: string }[]>([]);
 
+  // 加载工序
   useEffect(() => {
-    axios.get('/api/processes/')
-      .then(res => {
-        setProcesses(res.data.processes || []);
-      })
-      .catch(err => {
-        console.error('Failed to load processes', err);
-        message.error('加载工序失败');
-      });
+    const loadProcesses = async () => {
+      try {
+        const res = await getProcesses();
+        setProcesses(res.processes);
+      } catch (error) {
+        console.error('加载工序失败:', error);
+      }
+    };
+    loadProcesses();
   }, []);
 
   useEffect(() => {
