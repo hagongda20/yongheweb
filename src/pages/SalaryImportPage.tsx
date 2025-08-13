@@ -211,11 +211,18 @@ const SalaryImportPage: React.FC = () => {
   
         // 调用批量创建接口
         await batchCreateWageLogs(chunk);
-  
-        message.info(`已导入 ${Math.min(i + batchSize, data.length)} / ${data.length}`);
+        // 更新进度百分比
+        const percent = Math.round(((i + chunk.length) / data.length) * 100);
+        setProgress(percent);
+        //message.info(`已导入 ${Math.min(i + batchSize, data.length)} / ${data.length}`);
       }
   
       message.success('批量导入完成！');
+
+      // 2 秒后隐藏进度条
+      setTimeout(() => {
+        setProgress(0);
+      }, 2000);
     } catch (error) {
       console.error('批量导入失败：', error);
       message.error('批量导入失败，请检查控制台');
@@ -224,41 +231,48 @@ const SalaryImportPage: React.FC = () => {
 
   return (
     <div style={{ padding: 20 }}>
-      <style>{styles}</style>
-      <h2>薪资导入（前台解析+批量导入）</h2>
-      <Upload
-        beforeUpload={handleFile}
-        accept=".xlsx,.xls"
-        maxCount={1}
-        showUploadList={false}
-      >
-        <Button icon={<UploadOutlined />}>选择 Excel 文件</Button>
-      </Upload>
+        <style>{styles}</style>
+        <h2>薪资导入（前台解析+批量导入）</h2>
 
-      <div style={{ margin: '10px 0' }}>
-        <Button type="primary" onClick={checkWorkers} style={{ marginRight: 10 }}>
-          核查人员
-        </Button>
-        <Button type="primary" onClick={checkPriceAndCompute} style={{ marginRight: 10 }}>
-          核查单价并计算薪资
-        </Button>
-        <Button type="primary" onClick={importToDB}>
-          批量导入到数据库
-        </Button>
-      </div>
+        {/* 顶部按钮区域：左右分布 */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0' }}>
+            {/* 左侧：选择文件按钮 */}
+            <Upload
+            beforeUpload={handleFile}
+            accept=".xlsx,.xls"
+            maxCount={1}
+            showUploadList={false}
+            >
+            <Button icon={<UploadOutlined />}>选择 Excel 文件</Button>
+            </Upload>
 
-      {progress > 0 && <Progress percent={progress} />}
+            {/* 右侧：三个操作按钮 */}
+            <div>
+            <Button type="primary" onClick={checkWorkers} style={{ marginRight: 10 }}>
+                核查人员
+            </Button>
+            <Button type="primary" onClick={checkPriceAndCompute} style={{ marginRight: 10 }}>
+                核查单价并计算薪资
+            </Button>
+            <Button type="primary" onClick={importToDB}>
+                批量导入到数据库
+            </Button>
+            </div>
+        </div>
 
-      <Table
-        dataSource={data}
-        columns={columns}
-        pagination={false}
-        rowClassName={(record) =>
+        {progress > 0 && <Progress percent={progress} />}
+
+        <Table
+            dataSource={data}
+            columns={columns}
+            pagination={false}
+            rowClassName={(record) =>
             record._workerMatched === false || record._priceMatched === false ? 'row-red' : ''
-          }
-        style={{ marginTop: 20 }}
-      />
+            }
+            style={{ marginTop: 20 }}
+        />
     </div>
+
   );
 };
 

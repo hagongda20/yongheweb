@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Button, Form, Input, Select, Modal, Table } from 'antd';
 import { getSpecModels, createSpecModel, updateSpecModel, deleteSpecModel, SpecModel } from '../services/specModel';
 import { getProcesses } from '../services/processes';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const { Option } = Select;
 const { Search } = Input;
@@ -58,14 +60,11 @@ const SpecModelPage: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await deleteSpecModel(id);
-      loadSpecModels(); // 更新规格型号列表
+      loadSpecModels();
     } catch (error) {
       console.error('删除规格型号失败:', error);
     }
   };
-  
-  
-  
 
   const handleSearch = (value: string) => {
     setSearchValue(value);
@@ -86,19 +85,31 @@ const SpecModelPage: React.FC = () => {
     return process ? process.name.includes(searchValue) : false;
   });
 
+  // 导出 Excel
+  const handleExport = () => {
+    const exportData = filteredSpecModels.map(spec => {
+      const process = processes.find(p => p.id === spec.process_id);
+      return {
+        规格名称: spec.name,
+        分类: spec.category,
+        工价: spec.price,
+        工序: process ? process.name : '-',
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '规格型号');
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(data, '规格型号.xlsx');
+  };
+
   const columns = [
-    {
-      title: '规格名称',
-      dataIndex: 'name',
-    },
-    {
-      title: '分类',
-      dataIndex: 'category',
-    },
-    {
-      title: '价格',
-      dataIndex: 'price',
-    },
+    { title: '规格名称', dataIndex: 'name' },
+    { title: '分类', dataIndex: 'category' },
+    { title: '价格', dataIndex: 'price' },
     {
       title: '工序',
       dataIndex: 'process_id',
@@ -111,12 +122,8 @@ const SpecModelPage: React.FC = () => {
       title: '操作',
       render: (_: any, spec: SpecModel) => (
         <div>
-          <Button type="link" onClick={() => handleEdit(spec)}>
-            编辑
-          </Button>
-          <Button type="link" danger onClick={() => handleDelete(spec.id)}>
-            删除
-          </Button>
+          <Button type="link" onClick={() => handleEdit(spec)}>编辑</Button>
+          <Button type="link" danger onClick={() => handleDelete(spec.id)}>删除</Button>
         </div>
       ),
     },
@@ -133,9 +140,9 @@ const SpecModelPage: React.FC = () => {
           style={{ width: 300, marginBottom: 20 }}
           allowClear
         />
-        <Button type="primary" onClick={() => setShowForm(true)} style={{ float: 'right' }}>
-          新增规格型号
-        </Button>
+        <Button type="primary" onClick={() => setShowForm(true)}>新增规格型号</Button>
+        
+        <Button style={{float:'right'}} onClick={handleExport}>导出查询结果</Button>
       </div>
 
       <Table
@@ -143,7 +150,7 @@ const SpecModelPage: React.FC = () => {
         columns={columns}
         loading={loading}
         rowKey="id"
-        pagination={false}  // 👈 加上这一行，禁用分页
+        pagination={false}
       />
 
       <Modal
@@ -180,7 +187,7 @@ const SpecModelForm: React.FC<SpecModelFormProps> = ({ initialData, onSave, onCa
       id: initialData?.id || 0,
       name: values.name,
       category: values.category,
-      price:values.price,
+      price: values.price,
       process_id: Number(values.process_id),
     };
     onSave(data);
@@ -193,6 +200,7 @@ const SpecModelForm: React.FC<SpecModelFormProps> = ({ initialData, onSave, onCa
         name: initialData?.name || '',
         category: initialData?.category || '',
         process_id: initialData?.process_id || '',
+        price: initialData?.price || '',
       }}
       layout="vertical"
       onFinish={handleSubmit}
@@ -228,12 +236,11 @@ const SpecModelForm: React.FC<SpecModelFormProps> = ({ initialData, onSave, onCa
       </Form.Item>
 
       <Form.Item
-        
         name="price"
         label="工价"
         rules={[{ required: true, message: '请输入工价！' }]}
       >
-        <Input type="number"/>
+        <Input type="number" />
       </Form.Item>
 
       <div className="text-right">
