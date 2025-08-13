@@ -44,6 +44,11 @@ const Sidebar = () => {
           icon: <SearchOutlined />,
           label: <Link to="/wage_logs_check">工资查询</Link>,
         },
+        {
+          key: '/salary_import',
+          icon: <SearchOutlined />,
+          label: <Link to="/salary_import">薪资导入</Link>,
+        },
       ]}
     />
   );

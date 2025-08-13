@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar';
 import WageLogSearchPage from './pages/WageLogSearchPage';
 import WageLogPage from './pages/WageLogPage';
 import LoginPage from './pages/LoginPage';
+import SalaryImportPage from './pages/SalaryImportPage';
 
 const {Content, Sider } = Layout;
 
@@ -31,6 +32,7 @@ function App() {
               <Route path="/spec-models" element={<SpecModelPage />} />
               <Route path="/wage_logs" element={<WageLogPage />} />
               <Route path="/wage_logs_check" element={<WageLogSearchPage />} />
+              <Route path="/salary_import" element={<SalaryImportPage />} />
             </Routes>
           </Content>
         </Layout>

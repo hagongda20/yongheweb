@@ -51,6 +51,18 @@ export const createWageLog = async (wageLogData: Omit<WageLog, 'id'>) => {
   }
 };
 
+// 批量创建工资记录
+export const batchCreateWageLogs = async (wageLogs: Omit<WageLog, 'id'>[]) => {
+  try {
+    // 假设后端提供 /api/wage_logs/batch POST 接口接收数组
+    const response = await request.post('/api/wage_logs/batch_import', wageLogs);
+    return response.data; // 返回批量创建结果
+  } catch (error) {
+    console.error('批量保存工资记录失败:', error);
+    throw error;
+  }
+};
+
 // 更新工资记录
 export const updateWageLog = async (id: number, wageLogData: WageLog) => {
   try {
@@ -109,3 +121,4 @@ export const getFilteredWageLogs = async (params: {
   const response = await request.get('/api/wage_logs/query', { params });
   return response.data;
 };
+
