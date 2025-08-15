@@ -192,6 +192,7 @@ const WageLogPage: React.FC = () => {
     {
       title: '工人姓名',
       dataIndex: 'worker_id',
+      sorter: (a, b) => a.worker_id - b.worker_id,
       valueType: 'select',
       request: async () =>
         allWorkers.map((item) => ({
@@ -224,6 +225,7 @@ const WageLogPage: React.FC = () => {
     {
       title: '工序',
       dataIndex: 'process_id',
+      sorter: (a, b) => a.process_id - b.process_id,
       valueType: 'select',
       request: async () =>
         processes.map((item) => ({
@@ -252,6 +254,7 @@ const WageLogPage: React.FC = () => {
     {
       title: '规格型号',
       dataIndex: 'spec_model_id',
+      sorter: (a, b) => a.spec_model_id - b.spec_model_id,
       valueType: 'select',
       formItemProps: { rules: [{ required: true }] },
       dependencies: ['process_id'],

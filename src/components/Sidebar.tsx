@@ -5,6 +5,7 @@ import {
   SearchOutlined,
   DollarOutlined,
   FileTextOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -57,7 +58,7 @@ const Sidebar = () => {
           },
           {
             key: '/salary_import',
-            icon: <SearchOutlined />,
+            icon: <UploadOutlined />,
             label: <Link to="/salary_import">薪资导入</Link>,
           },
         ]}
