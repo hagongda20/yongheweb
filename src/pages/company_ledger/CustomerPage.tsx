@@ -92,7 +92,14 @@ const CustomerPage: React.FC = () => {
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'id' },
+    {
+        title: "序号",
+        width: 60,
+        //align: "center",
+        dataIndex: "__index", // 虚拟字段，用不到但 TS 必须有
+        render: (_: any, __: any, index: number) => index + 1,
+    },
+    //{ title: 'ID', dataIndex: 'id' },
     { title: '名称', dataIndex: 'name' },
     { title: '类型', dataIndex: 'type' },
     { title: '电话', dataIndex: 'phone' },

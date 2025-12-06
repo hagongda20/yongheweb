@@ -83,7 +83,7 @@ const TransactionPage: React.FC = () => {
       companyAccountRes.data.items.map((c: any) => ({ value: c.id, label: c.account_name, company_id: c.company_id}))
     );
 
-    const customerAccountRes = await axios.get("/api/customer_account/list");   //目前，list就是查询的全部
+    const customerAccountRes = await axios.get("/api/customer_account/all");   
     setCustomerAccounts(
       customerAccountRes.data.data.map((c: any) => ({ value: c.id, label: c.account_no, customer_id: c.customer_id }))
     );

@@ -127,7 +127,14 @@ const CustomerBalancePage: React.FC = () => {
   // 表格列
   // ----------------------
   const columns = [
-    { title: "ID", dataIndex: "id", width: 80 },
+    {
+        title: "序号",
+        width: 60,
+        //align: "center",
+        dataIndex: "__index", // 虚拟字段，用不到但 TS 必须有
+        render: (_: any, __: any, index: number) => index + 1,
+    },
+    //{ title: "ID", dataIndex: "id", width: 80 },
     { title: "客户", dataIndex: "customer_name" },
     { title: "公司", dataIndex: "company_name" },
     { title: "余额", dataIndex: "balance" },

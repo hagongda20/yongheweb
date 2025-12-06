@@ -14,7 +14,7 @@ import axios from "axios";
 const { Option } = Select;
 
 /* ----------------------------------
-   TypeScript 类型定义
+   TS 类型
 ----------------------------------- */
 interface Customer {
   id: number;
@@ -24,29 +24,32 @@ interface Customer {
 interface CustomerAccount {
   id: number;
   customer_id: number;
-  customer_name: string; // 后端最好返回此字段（推荐）
-  account_type: '银行' | '微信' | '支付宝' | '现金' | '其他';
-  account_no?: string;
-  bank_name?: string;
-  remark?: string;
-  is_deleted: boolean;
-}
-
-interface AccountForm {
-  customer_id: number;
+  customer_name: string;
   account_type: string;
   account_no?: string;
   bank_name?: string;
   remark?: string;
 }
 
+interface PageData<T> {
+  items: T[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
 /* ----------------------------------
-   主页面组件
+   主组件
 ----------------------------------- */
 const CustomerAccountPage: React.FC = () => {
   const [list, setList] = useState<CustomerAccount[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchCustomerId, setSearchCustomerId] = useState<number | null>(null);
+
+  const [page, setPage] = useState(1);
+  const [perPage] = useState(20);
+  const [total, setTotal] = useState(0);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -54,41 +57,51 @@ const CustomerAccountPage: React.FC = () => {
   const [form] = Form.useForm();
 
   /* ----------------------------------
-     获取客户列表（用于下拉选择）
+     获取客户（下拉框）
   ----------------------------------- */
   const fetchCustomers = async () => {
     try {
-        const res = await axios.get("/api/customer/");
-        //console.log("客户接口返回 >>> ", res.data);
-
-        const list = Array.isArray(res.data.items) ? res.data.items : [];
-        setCustomers(list);
-    } catch (err) {
-        message.error("获取客户列表失败");
+      const res = await axios.get("/api/customer/");
+      const list = Array.isArray(res.data.items) ? res.data.items : [];
+      setCustomers(list);
+    } catch {
+      message.error("获取客户列表失败");
     }
-    };
-
+  };
 
   /* ----------------------------------
-     获取账户列表
+     获取支付账户（分页）
   ----------------------------------- */
-  const fetchList = async () => {
+  const fetchList = async (p = page) => {
     try {
       setLoading(true);
-      const res = await axios.get("/api/customer_account/list");
-      setList(res.data.data || []);
+      const res = await axios.get("/api/customer_account/list", {
+        params: {
+          page: p,
+          per_page: perPage,
+          customer_id: searchCustomerId,
+          //account_no: searchAccountNo,
+        },
+      });
+
+      const data: PageData<CustomerAccount> = res.data.data;
+
+      setList(data.items);
+      setTotal(data.total);
+      setPage(data.page);
     } finally {
       setLoading(false);
     }
   };
 
+
   useEffect(() => {
-    fetchList();
     fetchCustomers();
+    fetchList(1);
   }, []);
 
   /* ----------------------------------
-      新增
+     新增
   ----------------------------------- */
   const openAdd = () => {
     setEditingId(null);
@@ -97,7 +110,7 @@ const CustomerAccountPage: React.FC = () => {
   };
 
   /* ----------------------------------
-      编辑
+     编辑
   ----------------------------------- */
   const openEdit = (record: CustomerAccount) => {
     setEditingId(record.id);
@@ -114,24 +127,24 @@ const CustomerAccountPage: React.FC = () => {
   };
 
   /* ----------------------------------
-      删除（软删除）
+     删除
   ----------------------------------- */
   const deleteItem = async (id: number) => {
     try {
       await axios.delete(`/api/customer_account/delete/${id}`);
       message.success("删除成功");
-      fetchList();
-    } catch (err) {
+      fetchList(page);
+    } catch {
       message.error("删除失败");
     }
   };
 
   /* ----------------------------------
-      提交（新增 / 编辑）
+     保存
   ----------------------------------- */
   const onSubmit = async () => {
     try {
-      const values: AccountForm = await form.validateFields();
+      const values = await form.validateFields();
 
       if (editingId) {
         await axios.put(`/api/customer_account/update/${editingId}`, values);
@@ -142,43 +155,46 @@ const CustomerAccountPage: React.FC = () => {
       }
 
       setModalVisible(false);
-      fetchList();
+      fetchList(page);
     } catch (err) {
       console.log(err);
     }
   };
 
   /* ----------------------------------
-      表格列配置
+     表格列
   ----------------------------------- */
   const columns = [
     {
-      title: "客户名称",
+        title: "序号",
+        width: 60,
+        //align: "center",
+        dataIndex: "__index", // 虚拟字段，用不到但 TS 必须有
+        render: (_: any, __: any, index: number) => index + 1,
+    },
+    {
+      title: "客户",
       dataIndex: "customer_name",
       width: 150,
     },
     {
       title: "账户类型",
       dataIndex: "account_type",
-      //render: (v: string) =>
-        //({ bank: "银行", wechat: "微信", alipay: "支付宝", other: "其他" }[v]),
+      width: 100,
     },
-    { title: "账号", dataIndex: "account_no" },
-    { title: "银行名称", dataIndex: "bank_name" },
+    { title: "账号", dataIndex: "account_no", width: 140 },
+    { title: "银行名称", dataIndex: "bank_name", width: 120 },
     { title: "备注", dataIndex: "remark" },
     {
       title: "操作",
-      width: 160,
+      width: 150,
       render: (_: any, record: CustomerAccount) => (
         <>
           <Button size="small" type="link" onClick={() => openEdit(record)}>
             编辑
           </Button>
 
-          <Popconfirm
-            title="确认删除？"
-            onConfirm={() => deleteItem(record.id)}
-          >
+          <Popconfirm title="确认删除？" onConfirm={() => deleteItem(record.id)}>
             <Button size="small" type="link" danger>
               删除
             </Button>
@@ -192,6 +208,39 @@ const CustomerAccountPage: React.FC = () => {
     <div style={{ padding: 20 }}>
       <h2>客户支付账户管理</h2>
 
+    <div style={{ marginBottom: 16, display: "flex", gap: 10 }}>
+      <Select
+        showSearch
+        allowClear
+        placeholder="按客户查询"
+        style={{ width: 180 }}
+        value={searchCustomerId}
+        onChange={(v) => setSearchCustomerId(v || null)}
+        filterOption={(input, option: any) =>
+          option.label.toLowerCase().includes(input.toLowerCase())
+        }
+        options={customers.map((c) => ({
+          value: c.id,
+          label: c.name,
+        }))}
+      />
+
+      <Button type="primary" onClick={() => fetchList(1)}>
+        查询
+      </Button>
+
+      <Button
+        onClick={() => {
+          setSearchCustomerId(null);
+          //setSearchAccountNo("");
+          fetchList(1);
+        }}
+      >
+        重置
+      </Button>
+    </div>
+
+
       <Button type="primary" onClick={openAdd} style={{ marginBottom: 16 }}>
         新增支付账户
       </Button>
@@ -200,8 +249,13 @@ const CustomerAccountPage: React.FC = () => {
         rowKey="id"
         dataSource={list}
         columns={columns}
-        bordered
         loading={loading}
+        pagination={{
+          current: page,
+          pageSize: perPage,
+          total: total,
+          onChange: (p) => fetchList(p),
+        }}
       />
 
       {/* 新增 / 编辑 弹窗 */}
@@ -213,7 +267,6 @@ const CustomerAccountPage: React.FC = () => {
         okText="保存"
       >
         <Form form={form} layout="vertical">
-
           <Form.Item
             label="客户"
             name="customer_id"
@@ -257,7 +310,6 @@ const CustomerAccountPage: React.FC = () => {
           <Form.Item label="备注" name="remark">
             <Input.TextArea rows={3} />
           </Form.Item>
-
         </Form>
       </Modal>
     </div>

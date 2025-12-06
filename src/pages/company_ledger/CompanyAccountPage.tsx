@@ -10,6 +10,8 @@ const CompanyAccountPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, per_page: 20, total: 0 });
 
+  const [filterCompanyId, setFilterCompanyId] = useState<number | null>(null);
+
   const [modalVisible, setModalVisible] = useState(false);
   const [editingAccount, setEditingAccount] = useState<any | null>(null);
 
@@ -24,11 +26,11 @@ const CompanyAccountPage: React.FC = () => {
   };
 
   /** 加载公司账户分页数据 */
-  const fetchAccounts = async (page = 1) => {
+  const fetchAccounts = async (page = 1, company_id = filterCompanyId) => {
     setLoading(true);
     try {
       const res = await axios.get("/api/company_account/list", {
-        params: { page, per_page: pagination.per_page }
+        params: { page, per_page: pagination.per_page, company_id }
       });
 
       if (res.data.success) {
@@ -49,6 +51,12 @@ const CompanyAccountPage: React.FC = () => {
     fetchAccounts();
   }, []);
 
+  /** 切换公司筛选 */
+  const handleCompanyFilter = (val: number | null) => {
+    setFilterCompanyId(val);
+    fetchAccounts(1, val);
+  };
+
   /** 打开新增 */
   const openAdd = () => {
     setEditingAccount(null);
@@ -68,11 +76,9 @@ const CompanyAccountPage: React.FC = () => {
     const values = await form.validateFields();
     try {
       if (editingAccount) {
-        // 编辑
         const res = await axios.put(`/api/company_account/update/${editingAccount.id}`, values);
         if (res.data.success) message.success("更新成功");
       } else {
-        // 新增
         const res = await axios.post("/api/company_account/add", values);
         if (res.data.success) message.success("新增成功");
       }
@@ -99,7 +105,12 @@ const CompanyAccountPage: React.FC = () => {
 
   /** 表格列 */
   const columns = [
-    { title: "ID", dataIndex: "id", width: 60 },
+    {
+      title: "序号",
+      width: 60,
+      dataIndex: "__index",
+      render: (_: any, __: any, index: number) => index + 1,
+    },
     { title: "公司", dataIndex: "company_name" },
     { title: "账户名称", dataIndex: "account_name" },
     { title: "类型", dataIndex: "account_type" },
@@ -113,7 +124,6 @@ const CompanyAccountPage: React.FC = () => {
     },
     { title: "状态", dataIndex: "status" },
     { title: "备注", dataIndex: "remark" },
-
     {
       title: "操作",
       width: 150,
@@ -128,13 +138,44 @@ const CompanyAccountPage: React.FC = () => {
     }
   ];
 
+  /** TS 不报错的模糊搜索函数 */
+  const companyFilterOption = (input: string, option?: any) => {
+    let label = "";
+
+    if (typeof option?.children === "string") {
+      label = option.children;
+    } else if (typeof option?.label === "string") {
+      label = option.label;
+    }
+
+    return label.toLowerCase().includes(input.toLowerCase());
+  };
+
   return (
     <div style={{ padding: 20 }}>
       <h2>公司账户管理</h2>
 
-      <Button type="primary" onClick={openAdd} style={{ marginBottom: 16 }}>
-        新增账户
-      </Button>
+      {/* 顶部公司搜索 */}
+      <div style={{ marginBottom: 16, display: "flex", gap: 12 }}>
+        <Select
+          showSearch
+          allowClear
+          placeholder="请选择公司"
+          style={{ width: 220 }}
+          value={filterCompanyId}
+          onChange={handleCompanyFilter}
+          optionFilterProp="children"
+          filterOption={companyFilterOption}
+        >
+          {companies.map(c => (
+            <Option key={c.id} value={c.id}>{c.name}</Option>
+          ))}
+        </Select>
+
+        <Button type="primary" onClick={openAdd}>
+          新增账户
+        </Button>
+      </div>
 
       <Table
         rowKey="id"
@@ -170,19 +211,11 @@ const CompanyAccountPage: React.FC = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item
-            label="账户名称"
-            name="account_name"
-            rules={[{ required: true }]}
-          >
+          <Form.Item label="账户名称" name="account_name" rules={[{ required: true }]}>
             <Input placeholder="如：收款账户A" />
           </Form.Item>
 
-          <Form.Item
-            label="账户类型"
-            name="account_type"
-            rules={[{ required: true }]}
-          >
+          <Form.Item label="账户类型" name="account_type" rules={[{ required: true }]}>
             <Select>
               <Option value="银行">银行</Option>
               <Option value="微信">微信</Option>
@@ -192,11 +225,7 @@ const CompanyAccountPage: React.FC = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item
-            label="账号"
-            name="account_no"
-            rules={[{ required: true, message: "请输入账号" }]}
-          >
+          <Form.Item label="账号" name="account_no" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
 
