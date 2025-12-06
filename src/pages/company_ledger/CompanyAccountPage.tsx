@@ -184,10 +184,11 @@ const CompanyAccountPage: React.FC = () => {
             rules={[{ required: true }]}
           >
             <Select>
-              <Option value="bank">银行</Option>
-              <Option value="wechat">微信</Option>
-              <Option value="alipay">支付宝</Option>
-              <Option value="other">其它</Option>
+              <Option value="银行">银行</Option>
+              <Option value="微信">微信</Option>
+              <Option value="现金">现金</Option>
+              <Option value="支付宝">支付宝</Option>
+              <Option value="其它">其它</Option>
             </Select>
           </Form.Item>
 
@@ -213,8 +214,8 @@ const CompanyAccountPage: React.FC = () => {
 
           <Form.Item label="状态" name="status">
             <Select>
-              <Option value="active">正常</Option>
-              <Option value="inactive">停用</Option>
+              <Option value="正常">正常</Option>
+              <Option value="停用">停用</Option>
             </Select>
           </Form.Item>
 

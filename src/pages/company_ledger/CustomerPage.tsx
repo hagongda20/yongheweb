@@ -8,7 +8,7 @@ const { Option } = Select;
 interface Customer {
   id: number;
   name: string;
-  type: 'supplier' | 'sales' | 'other';
+  type: '供应商' | '客户' | '个人' | '其他';
   phone?: string;
   company?: string;
   remark?: string;
@@ -130,9 +130,10 @@ const CustomerPage: React.FC = () => {
           value={searchType}
           onChange={v => setSearchType(v)}
         >
-          <Option value="supplier">供应商</Option>
-          <Option value="sales">销售客户</Option>
-          <Option value="other">其他</Option>
+          <Option value="供应商">供应商</Option>
+          <Option value="客户">客户</Option>
+          <Option value="个人">个人</Option>
+          <Option value="其他">其他</Option>
         </Select>
         <Button type="primary" onClick={fetchCustomers}>搜索</Button>
         <Button style={{ marginLeft: 8 }} onClick={handleAdd}>新增客户</Button>
@@ -164,9 +165,10 @@ const CustomerPage: React.FC = () => {
           </Form.Item>
           <Form.Item name="type" label="类型" rules={[{ required: true, message: '请选择客户类型' }]}>
             <Select>
-              <Option value="supplier">供应商</Option>
-              <Option value="sales">销售客户</Option>
-              <Option value="other">其他</Option>
+              <Option value="供应商">供应商</Option>
+              <Option value="客户">客户</Option>
+              <Option value="个人">个人</Option>
+              <Option value="其他">其他</Option>
             </Select>
           </Form.Item>
           <Form.Item name="phone" label="电话">

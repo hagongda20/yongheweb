@@ -25,7 +25,7 @@ interface CustomerAccount {
   id: number;
   customer_id: number;
   customer_name: string; // 后端最好返回此字段（推荐）
-  account_type: "bank" | "wechat" | "alipay" | "other";
+  account_type: '银行' | '微信' | '支付宝' | '现金' | '其他';
   account_no?: string;
   bank_name?: string;
   remark?: string;
@@ -160,8 +160,8 @@ const CustomerAccountPage: React.FC = () => {
     {
       title: "账户类型",
       dataIndex: "account_type",
-      render: (v: string) =>
-        ({ bank: "银行卡", wechat: "微信", alipay: "支付宝", other: "其他" }[v]),
+      //render: (v: string) =>
+        //({ bank: "银行", wechat: "微信", alipay: "支付宝", other: "其他" }[v]),
     },
     { title: "账号", dataIndex: "account_no" },
     { title: "银行名称", dataIndex: "bank_name" },
@@ -238,10 +238,11 @@ const CustomerAccountPage: React.FC = () => {
             rules={[{ required: true }]}
           >
             <Select placeholder="请选择账户类型">
-              <Option value="bank">银行卡</Option>
-              <Option value="wechat">微信</Option>
-              <Option value="alipay">支付宝</Option>
-              <Option value="other">其他</Option>
+              <Option value="银行">银行</Option>
+              <Option value="微信">微信</Option>
+              <Option value="现金">现金</Option>
+              <Option value="支付宝">支付宝</Option>
+              <Option value="其它">其它</Option>
             </Select>
           </Form.Item>
 
