@@ -80,7 +80,7 @@ const TransactionPage: React.FC = () => {
 
     const companyAccountRes = await axios.get("/api/company_account/all");
     setCompanyAccounts(
-      companyAccountRes.data.data.items.map((c: any) => ({ value: c.id, label: c.account_name, company_id: c.company_id, }))
+      companyAccountRes.data.items.map((c: any) => ({ value: c.id, label: c.account_name, company_id: c.company_id}))
     );
 
     const customerAccountRes = await axios.get("/api/customer_account/list");   //目前，list就是查询的全部
@@ -148,33 +148,67 @@ const TransactionPage: React.FC = () => {
     }
   };
 
-  /** 导出当前查询结果到 Excel */
-  const exportExcel = () => {
-    if (!list || list.length === 0) {
+
+  /** 导出全部数据（根据查询条件重新请求一次） */
+  const exportExcel = async () => {
+    try {
+        // 1) 获取查询条件
+        const query = queryForm.getFieldsValue();
+
+        if (query.dateRange) {
+        query.start_date = query.dateRange[0].format("YYYY-MM-DD");
+        query.end_date = query.dateRange[1].format("YYYY-MM-DD");
+        }
+
+        // 2) 加参数让后端返回全部数据（你的列表接口支持 per_page=0）
+        const params = {
+        ...query,
+        //per_page: 0, // ★ 关键：不分页，返回全部
+        };
+
+        const res = await axios.get("/api/transaction/all", { params });
+
+        const items = res.data.data || [];
+
+        if (!items.length) {
         message.warning("没有可导出的数据");
         return;
-    }
-    console.log('导出的数据：', list);
-    const sheetData = list.map((item) => ({
-        //日期: item.date,
+        }
+
+        // 3) 映射字段到 Excel 列
+        const sheetData = items.map((item: any) => ({
         公司: item.company_name,
         客户: item.customer_name,
+        客户账户: item.customer_account_name,
         方向: item.direction,
         金额: item.amount,
         方法: item.method,
         状态: item.status,
+        交易号: item.reference_no,
         备注: item.remark,
         创建时间: item.created_at,
-        更新时间: item.updated_at
-    }));
+        更新时间: item.updated_at,
+        }));
 
-    const ws = XLSX.utils.json_to_sheet(sheetData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "流水数据");
+        // 4) 生成 Excel
+        const ws = XLSX.utils.json_to_sheet(sheetData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "流水数据");
 
-    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([excelBuffer]), `流水查询_${Date.now()}.xlsx`);
+        const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        saveAs(
+        new Blob([excelBuffer]),
+        `流水查询_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.xlsx`
+        );
+
+        message.success(`成功导出 ${items.length} 条记录`);
+
+    } catch (err) {
+        console.error(err);
+        message.error("导出失败，请检查网络或后端接口");
+    }
   };
+
 
   /** 提交新增/编辑 */
   const onFinish = async (values: any) => {
@@ -314,13 +348,19 @@ const TransactionPage: React.FC = () => {
                 </Form.Item>
 
                 <Form.Item name="customer_id" label="客户">
-                <Select placeholder="请选择客户" allowClear style={{ width: 180 }}>
-                    {customers.map((i) => (
-                    <Select.Option key={i.value} value={i.value}>
-                        {i.label}
-                    </Select.Option>
-                    ))}
-                </Select>
+                    <Select
+                        showSearch                     // 允许输入
+                        allowClear
+                        placeholder="请选择客户"
+                        style={{ width: 180 }}
+                        optionFilterProp="label"       // 使用 label 进行过滤
+                        filterOption={(input, option) =>
+                            (option?.label ?? '')
+                                .toLowerCase()
+                                .includes(input.toLowerCase())
+                        }
+                        options={customers}            // 直接绑定你的 options
+                    />
                 </Form.Item>
 
                 <Form.Item name="direction" label="方向">
