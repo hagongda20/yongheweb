@@ -1,4 +1,4 @@
-import { Menu } from "antd";
+import { Menu, message } from "antd";
 import {
   UserOutlined,
   AppstoreOutlined,
@@ -11,73 +11,159 @@ import {
   BankOutlined,
   SolutionOutlined,
   SwapOutlined,
-  LoginOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { removeToken } from "../utils/auth";
+
+const { SubMenu } = Menu;
+
+interface MenuItem {
+  key: string;
+  label: React.ReactNode;
+  icon?: React.ReactNode;
+  roles?: string[];
+  onClick?: () => void;
+  children?: MenuItem[];
+}
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const selectedKey = location.pathname;
 
-  // 从本地获取用户角色
-  const userRoles: string[] = JSON.parse(localStorage.getItem("roles") || "[]");
+  /** 当前用户角色 */
+  const userRoles: string[] = JSON.parse(
+    localStorage.getItem("roles") || "[]"
+  );
 
-  // 判断是否有权限
-  const hasPermission = (itemRoles?: string[]) => {
-    if (!itemRoles || itemRoles.length === 0) return true; // 默认可见
-    return itemRoles.some(role => userRoles.includes(role));
+  /** 权限判断（不写 roles = 默认有权限） */
+  const hasPermission = (roles?: string[]) => {
+    if (!roles || roles.length === 0) return true;
+    return roles.some(role => userRoles.includes(role));
   };
 
-  // 菜单配置
-  const menuItems = [
+  /** 退出登录 */
+  const handleLogout = () => {
+    removeToken();
+    localStorage.removeItem("roles");
+    message.success("已退出登录");
+    navigate("/login");
+  };
+
+  /** 原始菜单配置（父子都可单独加 roles） */
+  const menuItems: MenuItem[] = [
     {
       key: "salary-group",
-      icon: <TeamOutlined />,
       label: "工资管理",
+      icon: <TeamOutlined />,
       children: [
-        { key: "/workers", icon: <UserOutlined />, label: <Link to="/workers">工人信息</Link>, roles: [] },
-        { key: "/processes", icon: <AppstoreOutlined />, label: <Link to="/processes">工序调整</Link>, roles: [] },
-        { key: "/spec-models", icon: <DollarOutlined />, label: <Link to="/spec-models">规格工价</Link>, roles: [] },
-        { key: "/wage_logs", icon: <FileTextOutlined />, label: <Link to="/wage_logs">日薪录入</Link>, roles: [] },
-        { key: "/wage_logs_check", icon: <SearchOutlined />, label: <Link to="/wage_logs_check">工资查询</Link>, roles: [] },
-        { key: "/salary_import", icon: <UploadOutlined />, label: <Link to="/salary_import">薪资导入</Link>, roles: [] },
+        {
+          key: "/workers",
+          label: <Link to="/workers">工人信息</Link>,
+          icon: <UserOutlined />,
+        },
+        {
+          key: "/processes",
+          label: <Link to="/processes">工序调整</Link>,
+          icon: <AppstoreOutlined />,
+        },
+        {
+          key: "/spec-models",
+          label: <Link to="/spec-models">规格工价</Link>,
+          icon: <DollarOutlined />,
+        },
+        {
+          key: "/wage_logs",
+          label: <Link to="/wage_logs">日薪录入</Link>,
+          icon: <FileTextOutlined />,
+        },
+        {
+          key: "/wage_logs_check",
+          label: <Link to="/wage_logs_check">工资查询</Link>,
+          icon: <SearchOutlined />,
+        },
+        {
+          key: "/salary_import",
+          label: <Link to="/salary_import">薪资导入</Link>,
+          icon: <UploadOutlined />,
+        },
       ],
     },
     {
       key: "company-group",
-      icon: <BankOutlined />,
       label: "往来账管理",
+      icon: <BankOutlined />,
       children: [
-        { key: "/company", icon: <SolutionOutlined />, label: <Link to="/company">公司管理</Link>, roles: [] },
-        { key: "/company_account", icon: <BankOutlined />, label: <Link to="/company_account">公司账户</Link>, roles: [] },
-        { key: "/customer", icon: <UserOutlined />, label: <Link to="/customer">客户管理</Link>, roles: [] },
-        { key: "/customer_account", icon: <SettingOutlined />, label: <Link to="/customer_account">客户账户</Link>, roles: [] },
-        { key: "/customer_balance", icon: <DollarOutlined />, label: <Link to="/customer_balance">客户余额</Link>, roles: [] },
-        { key: "/transaction", icon: <SwapOutlined />, label: <Link to="/transaction">转账流水</Link>, roles: [] },
+        {
+          key: "/company",
+          label: <Link to="/company">公司管理</Link>,
+          icon: <SolutionOutlined />,
+        },
+        {
+          key: "/company_account",
+          label: <Link to="/company_account">公司账户</Link>,
+          icon: <BankOutlined />,
+        },
+        {
+          key: "/customer",
+          label: <Link to="/customer">客户管理</Link>,
+          icon: <UserOutlined />,
+        },
+        {
+          key: "/customer_account",
+          label: <Link to="/customer_account">客户账户</Link>,
+          icon: <SettingOutlined />,
+        },
+        {
+          key: "/customer_balance",
+          label: <Link to="/customer_balance">客户余额</Link>,
+          icon: <DollarOutlined />,
+        },
+        {
+          key: "/transaction",
+          label: <Link to="/transaction">转账流水</Link>,
+          icon: <SwapOutlined />,
+        },
       ],
     },
     {
       key: "users-group",
-      icon: <UserOutlined />,
       label: "用户管理",
-      //roles: ["管理员"] ,// ⭐ 仅管理员可见
+      icon: <UserOutlined />,
+      //roles: ["管理员"], // ⭐ 父级权限（可随时删）
       children: [
-        { key: "/login", icon: <LoginOutlined />, label: <Link to="/login">登录注册</Link>, roles: [] },
-        { 
-          key: "/auditUser", 
-          icon: <LoginOutlined />, 
-          label: <Link to="/registerList">注册审核</Link>, 
-          roles: ["管理员"] // ⭐ 仅管理员可见
+        {
+          key: "/registerList",
+          label: <Link to="/registerList">注册审核</Link>,
+          icon: <UserOutlined />,
+          roles: ["管理员"], // ⭐ 子级权限
+        },
+        {
+          key: "logout",
+          label: "退出登录",
+          icon: <LogoutOutlined />,
+          onClick: handleLogout,
         },
       ],
     },
   ];
 
-  // 过滤没有权限的菜单
-  const filteredItems = menuItems.map(group => ({
-    ...group,
-    children: group.children?.filter(item => hasPermission(item.roles)) || [],
-  }));
+  /**
+   * ⭐⭐ 关键：统一过滤父 + 子
+   * - 父没权限 → 不渲染
+   * - 子没权限 → 不显示
+   * - 子被过滤光 → 父也不显示
+   */
+  const filteredMenu = menuItems
+    .filter(group => hasPermission(group.roles))
+    .map(group => {
+      const children = (group.children || []).filter(child =>
+        hasPermission(child.roles)
+      );
+      return { ...group, children };
+    })
+    .filter(group => group.children && group.children.length > 0);
 
   return (
     <div
@@ -85,19 +171,35 @@ const Sidebar = () => {
         position: "fixed",
         top: 0,
         left: 0,
+        width: 200,
         height: "100vh",
         overflowY: "auto",
-        width: 200,
-        zIndex: 1000,
       }}
     >
       <Menu
         theme="dark"
         mode="inline"
         selectedKeys={[selectedKey]}
-        defaultOpenKeys={["salary-group", "company-group"]}
-        items={filteredItems}
-      />
+        defaultOpenKeys={[]} // ⭐ 默认全部折叠
+      >
+        {filteredMenu.map(group => (
+          <SubMenu
+            key={group.key}
+            icon={group.icon}
+            title={group.label}
+          >
+            {group.children!.map(item => (
+              <Menu.Item
+                key={item.key}
+                icon={item.icon}
+                onClick={item.onClick}
+              >
+                {item.label}
+              </Menu.Item>
+            ))}
+          </SubMenu>
+        ))}
+      </Menu>
     </div>
   );
 };
