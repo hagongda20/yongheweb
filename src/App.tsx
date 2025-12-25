@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar';
 import WageLogSearchPage from './pages/WageLogSearchPage';
 import WageLogPage from './pages/WageLogPage';
 import LoginPage from './pages/LoginPage';
+import LoginRegister from './pages/users/LoginRegister';
 import SalaryImportPage from './pages/SalaryImportPage';
 import CompanyManagement from './pages/company_ledger/CompanyManagement'
 import CustomerPage from './pages/company_ledger/CustomerPage'
@@ -14,6 +15,7 @@ import CustomerAccountPage from './pages/company_ledger/CustomerAccountPage';
 import CompanyAccountPage from './pages/company_ledger/CompanyAccountPage';
 import CustomerBalancePage from './pages/company_ledger/CustomerBalancePage';
 import TransactionPage from './pages/company_ledger/TransactionPage';
+import AuditUser from './pages/users/AuditUser';
 
 const {Content, Sider } = Layout;
 
@@ -32,7 +34,8 @@ function App() {
           
           <Content style={{ margin: '16px', background: colorBgContainer, padding: 24 }}>
             <Routes>
-              <Route path="/login" element={<LoginPage />} />
+              <Route path="/registerList" element={<AuditUser />} />
+              <Route path="/login" element={<LoginRegister />} />
               <Route path="/workers" element={<WorkerPage />} />
               <Route path="/processes" element={<ProcessPage />} />
               <Route path="/spec-models" element={<SpecModelPage />} />
