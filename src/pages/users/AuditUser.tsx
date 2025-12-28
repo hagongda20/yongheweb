@@ -51,6 +51,7 @@ const AuditUser: React.FC = () => {
         columns={[
           { title: '用户名', dataIndex: 'username' },
           { title: '姓名', dataIndex: 'real_name' },
+          { title: '公司', dataIndex: 'company_name' },
           { title: '手机号', dataIndex: 'phone' },
           {
             title: '审核状态',
