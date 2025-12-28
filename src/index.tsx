@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { App as AntdApp } from 'antd';
 import 'antd/dist/reset.css'; // Ant Design v5 的推荐样式引入
 import './index.css';
 import App from './App';
@@ -10,7 +11,9 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <App />
+    <AntdApp>
+      <App />
+    </AntdApp>
   </React.StrictMode>
 );
 

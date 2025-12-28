@@ -94,6 +94,7 @@ const Sidebar = () => {
       key: "company-group",
       label: "往来账管理",
       icon: <BankOutlined />,
+      roles: ["管理员"], // ⭐ 父级权限（可随时删）
       children: [
         {
           key: "/company",

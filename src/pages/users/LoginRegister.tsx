@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, message, Tabs, Select } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  Tabs,
+  Select,
+  App,
+} from "antd";
 import { useNavigate } from "react-router-dom";
 import request from "../../utils/request";
 import { setToken } from "../../utils/auth";
@@ -8,28 +15,30 @@ const { TabPane } = Tabs;
 const { Option } = Select;
 
 const LoginRegister: React.FC = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
+
+  const [activeKey, setActiveKey] = useState<"login" | "register">("login");
   const [loading, setLoading] = useState(false);
   const [companies, setCompanies] = useState<any[]>([]);
 
-  //加载公司列表
+  /* 加载公司列表 */
   useEffect(() => {
     request
-        .get("/api/company/list")
-        .then((res) => {
+      .get("/api/company/list")
+      .then((res) => {
         if (res.data?.success) {
-            setCompanies(res.data.data || []);
+          setCompanies(res.data.data || []);
         } else {
-            message.error("公司列表加载失败");
+          message.error("公司列表加载失败");
         }
-        })
-        .catch(() => {
+      })
+      .catch(() => {
         message.error("公司列表加载失败");
-        });
+      });
   }, []);
 
-
-  /* 登录 */
+  /*  登录 */
   const handleLogin = async (values: {
     username: string;
     password: string;
@@ -37,19 +46,17 @@ const LoginRegister: React.FC = () => {
     setLoading(true);
     try {
       const res = await request.post("/api/users/", values);
-
       const { token, user } = res.data;
 
-      // 存 token
       setToken(token);
-
-      // 存用户信息
       localStorage.setItem("user", JSON.stringify(user));
-
-      // 存角色
       localStorage.setItem("roles", JSON.stringify(user.roles || []));
 
-      message.success("登录成功");
+      message.success({
+        content: "登录成功",
+        style: { marginTop: "35vh" },
+      });
+
       navigate("/");
     } catch (err: any) {
       message.error(err.response?.data?.msg || "登录失败");
@@ -62,11 +69,6 @@ const LoginRegister: React.FC = () => {
      注册
   ====================== */
   const handleRegister = async (values: any) => {
-    if (values.password !== values.confirm_password) {
-      message.error("两次密码不一致");
-      return;
-    }
-
     setLoading(true);
     try {
       await request.post("/api/users/register", {
@@ -75,10 +77,21 @@ const LoginRegister: React.FC = () => {
         real_name: values.real_name,
         phone: values.phone,
         remark: values.remark,
-        company_id: values.company_id, // ✅ 关键字段
+        company_id: values.company_id,
       });
 
-      message.success("注册成功，请等待管理员审核");
+      message.success({
+        content: "注册成功，等待审核",
+        style: {
+          marginTop: "35vh",
+          fontSize: 16,
+        },
+      });
+
+      // 延迟切回登录页，保证提示能看到
+      setTimeout(() => {
+        setActiveKey("login");
+      }, 800);
     } catch (err: any) {
       message.error(err.response?.data?.message || "注册失败");
     } finally {
@@ -88,7 +101,11 @@ const LoginRegister: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 380, margin: "120px auto" }}>
-      <Tabs defaultActiveKey="login" centered>
+      <Tabs
+        activeKey={activeKey}
+        onChange={(key) => setActiveKey(key as "login" | "register")}
+        centered
+      >
         {/* ================= 登录 ================= */}
         <TabPane tab="登录" key="login">
           <Form layout="vertical" onFinish={handleLogin}>
@@ -108,7 +125,12 @@ const LoginRegister: React.FC = () => {
               <Input.Password />
             </Form.Item>
 
-            <Button type="primary" htmlType="submit" loading={loading} block>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+            >
               登录
             </Button>
           </Form>
@@ -169,7 +191,20 @@ const LoginRegister: React.FC = () => {
             <Form.Item
               label="确认密码"
               name="confirm_password"
-              rules={[{ required: true, message: "请确认密码" }]}
+              dependencies={["password"]}
+              rules={[
+                { required: true, message: "请确认密码" },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue("password") === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(
+                      new Error("两次密码不一致")
+                    );
+                  },
+                }),
+              ]}
             >
               <Input.Password />
             </Form.Item>
@@ -178,7 +213,12 @@ const LoginRegister: React.FC = () => {
               <Input.TextArea rows={2} />
             </Form.Item>
 
-            <Button type="primary" htmlType="submit" loading={loading} block>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+            >
               提交注册申请
             </Button>
           </Form>
