@@ -90,6 +90,45 @@ const Sidebar = () => {
         },
       ],
     },
+    
+    {
+      key: "inventory-group",
+      label: "库存管理",
+      icon: <BankOutlined />,
+      children: [
+        {
+          key: "/inventory/spec",
+          label: <Link to="/inventory/spec">规格管理</Link>,
+          icon: <SettingOutlined />,
+        },
+        {
+          key: "/inventory/product",
+          label: <Link to="/inventory/product">产品管理</Link>,
+          icon: <AppstoreOutlined />,
+        },
+        {
+          key: "/inventory/list",
+          label: <Link to="/inventory/list">库存维护</Link>,
+          icon: <BankOutlined />,
+        },
+        {
+          key: "/inventory/operate",
+          label: <Link to="/inventory/operate">出入库操作</Link>,
+          icon: <SwapOutlined />,
+        },
+        {
+          key: "/inventory/logs",
+          label: <Link to="/inventory/logs">出入库流水</Link>,
+          icon: <SwapOutlined />,
+        },
+        {
+          key: "/inventory/check",
+          label: <Link to="/inventory/check">库存盘点</Link>,
+          icon: <SearchOutlined />,
+        },
+      ],
+    },
+
     {
       key: "company-group",
       label: "往来账管理",

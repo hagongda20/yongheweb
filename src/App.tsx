@@ -17,6 +17,12 @@ import CustomerAccountPage from "./pages/company_ledger/CustomerAccountPage";
 import CompanyAccountPage from "./pages/company_ledger/CompanyAccountPage";
 import CustomerBalancePage from "./pages/company_ledger/CustomerBalancePage";
 import TransactionPage from "./pages/company_ledger/TransactionPage";
+import SpecManage from "./pages/inventory/SpecManage";
+import ProductManage from "./pages/inventory/ProductManage";
+import InventoryLedger from "./pages/inventory/InventoryManage";
+import InventoryCheckPage from "./pages/inventory/InventoryCheckPage";
+import InventoryLogPage from "./pages/inventory/InventoryLogPage";
+import InventoryOperationPage from "./pages/inventory/InventoryOperationPage";
 
 const { Content, Sider } = Layout;
 
@@ -61,6 +67,15 @@ const AppLayout = () => {
             <Route path="/wage_logs" element={<WageLogPage />} />
             <Route path="/wage_logs_check" element={<WageLogSearchPage />} />
             <Route path="/salary_import" element={<SalaryImportPage />} />
+
+            {/* 库存管理 */}
+            <Route path="/inventory/spec" element={<SpecManage />} />
+            {/* 下面这些可以后续再实现 */}
+            <Route path="/inventory/product" element={<ProductManage />} /> 
+            <Route path="/inventory/list" element={<InventoryLedger />} />
+            <Route path="/inventory/operate" element={<InventoryOperationPage />} />  
+            <Route path="/inventory/logs" element={<InventoryLogPage />} /> 
+            <Route path="/inventory/check" element={<InventoryCheckPage />} />
 
             {/* 往来账 */}
             <Route path="/company" element={<CompanyManagement />} />
