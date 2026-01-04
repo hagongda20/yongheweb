@@ -33,13 +33,19 @@ interface SpecCategory {
 
 interface Inventory {
   id: number;
+  product_id: number;
   product_name: string;
   display_name: string;
-  spec_json: Record<string, string>; // code -> value
+  spec_json: Record<string, string>;
   quantity: number;
   warning_min_quantity: number;
   warning_max_quantity?: number;
   is_frozen: boolean;
+}
+
+interface Product {
+  id: number;
+  name: string;
 }
 
 /* =====================
@@ -49,19 +55,20 @@ interface Inventory {
 const InventoryLedger: React.FC = () => {
   const [specs, setSpecs] = useState<SpecCategory[]>([]);
   const [inventories, setInventories] = useState<Inventory[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
 
-  /* ====== 前端分页 ====== */
+  /* ===== 分页 ===== */
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  /* ====== 规格选择 ====== */
+  /* ===== 规格筛选 ===== */
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string | undefined>>({});
 
-  /* ====== 低库存开关 ====== */
+  /* ===== 低库存 ===== */
   const [onlyLowStock, setOnlyLowStock] = useState(false);
 
-  /* ====== 弹窗操作 ====== */
+  /* ===== 弹窗 ===== */
   const [current, setCurrent] = useState<Inventory | null>(null);
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
@@ -69,6 +76,7 @@ const InventoryLedger: React.FC = () => {
   /* =====================
    * 数据加载
    * ===================== */
+
   const loadSpecs = async () => {
     const res = await request.get('/api/inventory/spec/list');
     setSpecs(res.data?.data || []);
@@ -84,35 +92,57 @@ const InventoryLedger: React.FC = () => {
     }
   };
 
+  const loadProducts = async () => {
+    const res = await request.get('/api/inventory/product/list');
+    setProducts(res.data?.data || []);
+  };
+
   useEffect(() => {
     loadSpecs();
     loadInventories();
+    loadProducts();
   }, []);
 
   /* =====================
-   * 过滤列表（按规格名称 + 低库存）
+   * 初始化库存：可选产品
    * ===================== */
+
+  const productOptions = useMemo(() => {
+    const usedIds = inventories.map((i) => i.product_id);
+    return products
+      .filter((p) => !usedIds.includes(p.id))
+      .map((p) => ({
+        label: p.name, // 显示名称
+        value: p.id    // 提交 ID
+      }));
+  }, [products, inventories]);
+
+  /* =====================
+   * 前端过滤（规格 + 低库存）
+   * ===================== */
+
   const filteredList = useMemo(() => {
     return inventories.filter((inv) => {
       // 规格过滤
       for (const spec of specs) {
-        const selectedValue = selectedSpecs[spec.code];
-        if (!selectedValue) continue;
-        const actualValue = inv.spec_json?.[spec.code];
-        if (actualValue !== selectedValue) return false;
+        const selected = selectedSpecs[spec.code];
+        if (!selected) continue;
+        if (inv.spec_json?.[spec.code] !== selected) return false;
       }
-      // 低库存过滤
+
+      // 低库存
       if (onlyLowStock && inv.quantity >= inv.warning_min_quantity) return false;
 
       return true;
     });
-  }, [inventories, selectedSpecs, specs, onlyLowStock]);
+  }, [inventories, specs, selectedSpecs, onlyLowStock]);
 
   const pagedList = filteredList.slice((page - 1) * pageSize, page * pageSize);
 
   /* =====================
-   * 弹窗提交
+   * 提交
    * ===================== */
+
   const handleSubmit = async () => {
     const values = await form.validateFields();
 
@@ -145,25 +175,19 @@ const InventoryLedger: React.FC = () => {
   /* =====================
    * 表格列
    * ===================== */
+
   const columns: ColumnsType<Inventory> = [
     { title: '产品名称', dataIndex: 'product_name', fixed: 'left' },
     {
       title: '规格',
-      render: (_, r) =>
-        r.spec_json
-          ? Object.entries(r.spec_json)
-              .map(([code, value]) => {
-                const spec = specs.find((s) => s.code === code);
-                return spec ? value : value; // 可以替换成 spec.name + value
-              })
-              .join(' / ')
-          : ''
+      render: (_, r) => Object.values(r.spec_json || {}).join(' / ')
     },
     { title: '显示名称', dataIndex: 'display_name' },
     {
       title: '库存数量',
       dataIndex: 'quantity',
-      render: (v, r) => (v < r.warning_min_quantity ? <Tag color="red">{v}</Tag> : <Tag color="green">{v}</Tag>)
+      render: (v, r) =>
+        v < r.warning_min_quantity ? <Tag color="red">{v}</Tag> : <Tag color="green">{v}</Tag>
     },
     { title: '预警下限', dataIndex: 'warning_min_quantity' },
     {
@@ -173,7 +197,6 @@ const InventoryLedger: React.FC = () => {
     },
     {
       title: '操作',
-      fixed: 'right',
       render: (_, record) => (
         <Button
           size="small"
@@ -192,6 +215,7 @@ const InventoryLedger: React.FC = () => {
   /* =====================
    * 渲染
    * ===================== */
+
   return (
     <>
       <Card
@@ -209,7 +233,7 @@ const InventoryLedger: React.FC = () => {
           </Button>
         }
       >
-        {/* ====== 横向规格筛选 ====== */}
+        {/* ===== 规格筛选 ===== */}
         {specs.map((spec) => (
           <Card
             key={spec.code}
@@ -217,13 +241,16 @@ const InventoryLedger: React.FC = () => {
             style={{ marginBottom: 8 }}
             bodyStyle={{ padding: '8px 12px' }}
           >
-            <Space align="center" wrap>
-              <div style={{ minWidth: 80, fontWeight: 500, color: '#555' }}>{spec.name}：</div>
+            <Space wrap align="center">
+              <div style={{ minWidth: 80, fontWeight: 500 }}>{spec.name}：</div>
               <Radio.Group
                 value={selectedSpecs[spec.code]}
                 onChange={(e) => {
-                  setSelectedSpecs((prev) => ({ ...prev, [spec.code]: e.target.value }));
-                  setPage(1); // 切换规格回到第一页
+                  setSelectedSpecs((prev) => ({
+                    ...prev,
+                    [spec.code]: e.target.value
+                  }));
+                  setPage(1);
                 }}
               >
                 <Radio value={undefined}>全部</Radio>
@@ -237,13 +264,13 @@ const InventoryLedger: React.FC = () => {
           </Card>
         ))}
 
-        {/* ====== 低库存开关 ====== */}
+        {/* ===== 低库存 ===== */}
         <Space style={{ marginBottom: 12 }}>
           <span>低于最低库存</span>
-          <Switch checked={onlyLowStock} onChange={(v) => setOnlyLowStock(v)} />
+          <Switch checked={onlyLowStock} onChange={setOnlyLowStock} />
         </Space>
 
-        {/* ====== 表格分页显示 ====== */}
+        {/* ===== 表格 ===== */}
         <Table
           rowKey="id"
           loading={loading}
@@ -253,14 +280,14 @@ const InventoryLedger: React.FC = () => {
             current: page,
             pageSize,
             total: filteredList.length,
-            onChange: (p) => setPage(p),
+            onChange: setPage,
             showSizeChanger: false
           }}
           scroll={{ x: 1200 }}
         />
       </Card>
 
-      {/* ====== 弹窗 ====== */}
+      {/* ===== 弹窗 ===== */}
       <Modal
         open={open}
         title={current ? '编辑库存信息' : '初始化库存'}
@@ -274,20 +301,32 @@ const InventoryLedger: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           {!current && (
-            <Form.Item name="product_id" label="产品" rules={[{ required: true }]}>
-              <Select placeholder="选择产品">
-                {inventories
-                  .filter((p) => !inventories.some((inv) => inv.id === p.id))
-                  .map((p) => (
-                    <Select.Option key={p.id} value={p.id}>
-                      {p.product_name}
-                    </Select.Option>
-                  ))}
-              </Select>
+            <Form.Item
+              name="product_id"
+              label="产品"
+              rules={[{ required: true, message: '请选择产品' }]}
+            >
+              <Select
+                placeholder="选择产品"
+                options={productOptions}
+                onChange={(value) => {
+                  const product = products.find(p => p.id === value);
+                  if (product) {
+                    // ✅ 初始化库存时：显示名称默认等于产品名称
+                    form.setFieldsValue({
+                      display_name: product.name
+                    });
+                  }
+                }}
+              />
             </Form.Item>
           )}
 
-          <Form.Item name="display_name" label="显示名称" rules={[{ required: true }]}>
+          <Form.Item
+            name="display_name"
+            label="显示名称"
+            rules={[{ required: true, message: '请输入显示名称' }]}
+          >
             <Input />
           </Form.Item>
 
